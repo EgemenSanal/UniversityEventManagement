@@ -19,6 +19,10 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('/events-page', function () {
+    return Inertia::render('Events');
+})->middleware(['auth', 'verified'])->name('events-page');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -28,5 +32,8 @@ Route::middleware('auth')->group(function () {
 //Event routes
 Route::post('/createEvent',[EventController::class,'createEvent'])->middleware('auth');
 Route::get('/events',[EventController::class,'getAllEvents']);
+Route::get('/event/{id}',[EventController::class,'getEventByID'])->middleware('auth');
+Route::get('/user/events',[EventController::class,'getAllEventCreatedBySchool'])->middleware('auth');
+
 
 require __DIR__.'/auth.php';

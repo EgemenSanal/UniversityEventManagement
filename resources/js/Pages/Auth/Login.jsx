@@ -23,24 +23,33 @@ export default function Login({ status, canResetPassword }) {
 
     return (
         <GuestLayout>
-            <Head title="Log in" />
+            <Head title="Giriş Yap" />
+
+            <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-white mb-2">
+                    Hoş Geldiniz
+                </h2>
+                <p className="text-gray-400">
+                    Hesabınıza giriş yapın
+                </p>
+            </div>
 
             {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
+                <div className="mb-4 p-4 text-sm font-medium text-green-400 bg-green-500/10 border border-green-500/20 rounded-lg">
                     {status}
                 </div>
             )}
 
-            <form onSubmit={submit}>
+            <form onSubmit={submit} className="space-y-6">
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
+                    <InputLabel htmlFor="email" value="E-posta" />
 
                     <TextInput
                         id="email"
                         type="email"
                         name="email"
                         value={data.email}
-                        className="mt-1 block w-full"
+                        className="mt-2 block w-full"
                         autoComplete="username"
                         isFocused={true}
                         onChange={(e) => setData('email', e.target.value)}
@@ -49,15 +58,15 @@ export default function Login({ status, canResetPassword }) {
                     <InputError message={errors.email} className="mt-2" />
                 </div>
 
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
+                <div>
+                    <InputLabel htmlFor="password" value="Şifre" />
 
                     <TextInput
                         id="password"
                         type="password"
                         name="password"
                         value={data.password}
-                        className="mt-1 block w-full"
+                        className="mt-2 block w-full"
                         autoComplete="current-password"
                         onChange={(e) => setData('password', e.target.value)}
                     />
@@ -65,7 +74,7 @@ export default function Login({ status, canResetPassword }) {
                     <InputError message={errors.password} className="mt-2" />
                 </div>
 
-                <div className="mt-4 block">
+                <div className="flex items-center justify-between">
                     <label className="flex items-center">
                         <Checkbox
                             name="remember"
@@ -74,25 +83,40 @@ export default function Login({ status, canResetPassword }) {
                                 setData('remember', e.target.checked)
                             }
                         />
-                        <span className="ms-2 text-sm text-gray-600">
-                            Remember me
+                        <span className="ms-2 text-sm text-gray-400">
+                            Beni hatırla
                         </span>
                     </label>
-                </div>
 
-                <div className="mt-4 flex items-center justify-end">
                     {canResetPassword && (
                         <Link
                             href={route('password.request')}
-                            className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                            className="text-sm text-red-500 hover:text-red-400 transition duration-200"
                         >
-                            Forgot your password?
+                            Şifremi unuttum
                         </Link>
                     )}
+                </div>
 
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Log in
+                <div>
+                    <PrimaryButton 
+                        className="w-full justify-center" 
+                        disabled={processing}
+                    >
+                        {processing ? 'Giriş yapılıyor...' : 'Giriş Yap'}
                     </PrimaryButton>
+                </div>
+
+                <div className="text-center">
+                    <p className="text-sm text-gray-400">
+                        Hesabınız yok mu?{' '}
+                        <Link
+                            href={route('register')}
+                            className="text-red-500 hover:text-red-400 font-medium transition duration-200"
+                        >
+                            Kayıt olun
+                        </Link>
+                    </p>
                 </div>
             </form>
         </GuestLayout>
