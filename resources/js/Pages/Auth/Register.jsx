@@ -39,7 +39,7 @@ export default function Register() {
                     Hesap Oluştur
                 </h2>
                 <p className="text-gray-400">
-                    EventHub topluluğuna katılın
+                    Eventify topluluğuna katılın
                 </p>
             </div>
 

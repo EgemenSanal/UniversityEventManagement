@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class EventController extends Controller
 {
-    public function createEVent(Request $request) {
+    public function createEvent(Request $request) {
 
         $user = Auth::user();
         if(!($user->role === 'school')) {
@@ -43,13 +44,15 @@ class EventController extends Controller
     
     public function getEventByID($id) {
         $event = Event::where('id' , $id)->first();
+        $eventUniversity = User::where('id',$event->organizer_university_id)->first();
         if(empty($event)) {
             return response()->json([
                 'message' => 'Couldnt find event!'
             ],404);
         }
         return response()->json([
-            'event' => $event
+            'event' => $event,
+            'university' => $eventUniversity
         ],200);
     }
 
@@ -57,6 +60,8 @@ class EventController extends Controller
         $userID = Auth::id();
 
         $events = Event::where('organizer_university_id',$userID)->first();
+        $eventUniversity = User::where('id',$events->organizer_university_id)->first();
+
 
         if(empty($events)) {
             return response()->json([
@@ -64,7 +69,8 @@ class EventController extends Controller
             ]);
         }
         return response()->json([
-            'events' => $events
+            'events' => $events,
+            'university' => $eventUniversity
         ],200);
         
     }

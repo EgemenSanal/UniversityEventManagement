@@ -33,7 +33,7 @@ export default function Welcome({ auth }) {
                             <div className="flex items-center">
                                 <div className="flex-shrink-0">
                                     <h1 className="text-2xl font-bold bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-transparent">
-                                        EventHub
+                                        Eventify
                                     </h1>
                                 </div>
                             </div>
@@ -123,7 +123,7 @@ export default function Welcome({ auth }) {
                         <div className="text-center mb-16">
                             <h2 className="text-4xl font-bold mb-4">
                                 <span className="bg-gradient-to-r from-red-600 to-red-400 bg-clip-text text-transparent">
-                                    Neden EventHub?
+                                    Neden Eventify?
                                 </span>
                             </h2>
                             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
@@ -293,10 +293,10 @@ export default function Welcome({ auth }) {
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="text-center">
                             <h3 className="text-2xl font-bold bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-transparent mb-4">
-                                EventHub
+                                Eventify
                             </h3>
                             <p className="text-gray-500 text-sm">
-                                © 2024 EventHub. Tüm hakları saklıdır.
+                                © 2024 Eventify. Tüm hakları saklıdır.
                             </p>
                         </div>
                     </div>

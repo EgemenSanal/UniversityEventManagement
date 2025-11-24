@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -23,6 +24,10 @@ Route::get('/events-page', function () {
     return Inertia::render('Events');
 })->middleware(['auth', 'verified'])->name('events-page');
 
+Route::get('/event-detail/{id}', function ($id) {
+    return Inertia::render('EventDetail', ['eventId' => $id]);
+})->middleware(['auth', 'verified'])->name('event-detail');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -34,6 +39,10 @@ Route::post('/createEvent',[EventController::class,'createEvent'])->middleware('
 Route::get('/events',[EventController::class,'getAllEvents']);
 Route::get('/event/{id}',[EventController::class,'getEventByID'])->middleware('auth');
 Route::get('/user/events',[EventController::class,'getAllEventCreatedBySchool'])->middleware('auth');
+
+//Comment Routes
+Route::post('/comment',[CommentController::class,'store'])->middleware('auth');
+Route::get('/comment/get/{id}',[CommentController::class,'getAllCommentLinkedToEvent'])->middleware('auth');
 
 
 require __DIR__.'/auth.php';

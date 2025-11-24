@@ -6,6 +6,7 @@ export default function Events() {
     const [events, setEvents] = useState([]);
     const [allEvents, setAllEvents] = useState([]);
     const [universities, setUniversities] = useState([]);
+    const [universityMap, setUniversityMap] = useState({}); // university_id -> university_name mapping
     const [selectedUniversity, setSelectedUniversity] = useState('');
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -22,13 +23,34 @@ export default function Events() {
                     // Extract unique university IDs
                     const uniqueUniversityIds = [...new Set(data.map(event => event.organizer_university_id))];
                     
-                    // Create university list with IDs
-                    const universityList = uniqueUniversityIds.map(id => ({
-                        id: id,
-                        name: `Üniversite ${id}` // Backend'den isim gelmediği için ID kullanıyoruz
-                    }));
+                    // Fetch university names for each unique ID
+                    const universityPromises = uniqueUniversityIds.map(id => 
+                        fetch(`/event/${data.find(e => e.organizer_university_id === id)?.id || id}`, {
+                            headers: {
+                                'Accept': 'application/json',
+                            },
+                            credentials: 'include',
+                        })
+                        .then(res => res.json())
+                        .then(eventData => ({
+                            id: id,
+                            name: eventData.university?.name || `Üniversite ${id}`
+                        }))
+                        .catch(() => ({
+                            id: id,
+                            name: `Üniversite ${id}`
+                        }))
+                    );
                     
-                    setUniversities(universityList);
+                    Promise.all(universityPromises).then(universityList => {
+                        setUniversities(universityList);
+                        // Create a map for quick lookup
+                        const map = {};
+                        universityList.forEach(uni => {
+                            map[uni.id] = uni.name;
+                        });
+                        setUniversityMap(map);
+                    });
                 } else {
                     setAllEvents([]);
                     setEvents([]);
@@ -212,7 +234,7 @@ export default function Events() {
                                     <div className="p-6">
                                         <div className="mb-2">
                                             <span className="inline-block px-3 py-1 text-xs font-semibold bg-red-600/20 text-red-400 rounded-full border border-red-600/30">
-                                                Üniversite {event.organizer_university_id}
+                                                {universityMap[event.organizer_university_id] || `Üniversite ${event.organizer_university_id}`}
                                             </span>
                                         </div>
                                         <h3 className="text-xl font-bold mb-2 text-white line-clamp-2 group-hover:text-red-400 transition duration-200">
@@ -222,7 +244,7 @@ export default function Events() {
                                             {event.event_description}
                                         </p>
                                         <Link
-                                            href={`/event/${event.id}`}
+                                            href={route('event-detail', event.id)}
                                             className="inline-flex items-center text-red-500 hover:text-red-400 font-medium transition duration-200 group/link"
                                         >
                                             Detayları Gör
