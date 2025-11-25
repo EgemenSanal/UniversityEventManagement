@@ -13,8 +13,11 @@ class Comment extends Model
         'event_id',
         'comment',
     ];
-    public function user()
-{
+    public function user() {
     return $this->belongsTo(User::class);
 }
+
+    public function comment() {
+        return $this->belongsTo(Comment::class);
+    }
 }

@@ -3,6 +3,7 @@
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReplyController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -43,6 +44,11 @@ Route::get('/user/events',[EventController::class,'getAllEventCreatedBySchool'])
 //Comment Routes
 Route::post('/comment',[CommentController::class,'store'])->middleware('auth');
 Route::get('/comment/get/{id}',[CommentController::class,'getAllCommentLinkedToEvent'])->middleware('auth');
+
+//Reply Routes
+Route::post('/reply',[ReplyController::class,'store'])->middleware('auth');
+Route::get('/reply/get/{id}',[ReplyController::class,'getAllRepliesLinkedToComment'])->middleware('auth');
+
 
 
 require __DIR__.'/auth.php';

@@ -9,10 +9,17 @@ export default function EventDetail({ eventId }) {
     const { auth } = usePage().props;
     const user = auth.user;
     const isStudent = user?.role === 'student';
+    const isSchool = user?.role === 'school';
+    const canReply = isStudent || isSchool;
     
     const [event, setEvent] = useState(null);
     const [university, setUniversity] = useState(null);
     const [comments, setComments] = useState([]);
+    const [replies, setReplies] = useState({});
+    const [replyInputs, setReplyInputs] = useState({});
+    const [replyErrors, setReplyErrors] = useState({});
+    const [replySubmitLoading, setReplySubmitLoading] = useState({});
+    const [replyFetching, setReplyFetching] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [commentText, setCommentText] = useState('');
@@ -49,6 +56,32 @@ export default function EventDetail({ eventId }) {
     }, [eventId]);
 
     // Fetch comments
+    const fetchRepliesForComment = async (commentId) => {
+        setReplyFetching((prev) => ({ ...prev, [commentId]: true }));
+
+        try {
+            const response = await fetch(`/reply/get/${commentId}`, {
+                headers: {
+                    'Accept': 'application/json',
+                },
+                credentials: 'include',
+            });
+            const data = await response.json();
+            setReplies((prev) => ({
+                ...prev,
+                [commentId]: data.data && Array.isArray(data.data) ? data.data : [],
+            }));
+        } catch (error) {
+            console.error('Error fetching replies:', error);
+            setReplies((prev) => ({
+                ...prev,
+                [commentId]: [],
+            }));
+        } finally {
+            setReplyFetching((prev) => ({ ...prev, [commentId]: false }));
+        }
+    };
+
     const fetchComments = () => {
         if (!eventId) return;
         
@@ -85,6 +118,12 @@ export default function EventDetail({ eventId }) {
                         };
                     });
                     setComments(processedComments);
+                    setReplies({});
+                    processedComments.forEach((comment) => {
+                        if (comment.id) {
+                            fetchRepliesForComment(comment.id);
+                        }
+                    });
                 } else {
                     setComments([]);
                 }
@@ -150,6 +189,64 @@ export default function EventDetail({ eventId }) {
             setCommentError('Bir hata oluştu. Lütfen tekrar deneyin.');
         } finally {
             setCommentLoading(false);
+        }
+    };
+
+    const handleReplyInputChange = (commentId, value) => {
+        setReplyInputs((prev) => ({
+            ...prev,
+            [commentId]: value,
+        }));
+    };
+
+    const handleReplySubmit = async (e, commentId) => {
+        e.preventDefault();
+        const replyText = replyInputs[commentId]?.trim();
+
+        if (!replyText) return;
+
+        setReplySubmitLoading((prev) => ({ ...prev, [commentId]: true }));
+        setReplyErrors((prev) => ({ ...prev, [commentId]: '' }));
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+        try {
+            const response = await fetch('/reply', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    reply: replyText,
+                    event_id: parseInt(eventId),
+                    comment_id: commentId,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setReplyErrors((prev) => ({
+                    ...prev,
+                    [commentId]: data.message || 'Cevap eklenemedi. Lütfen tekrar deneyin.',
+                }));
+                return;
+            }
+
+            setReplyInputs((prev) => ({ ...prev, [commentId]: '' }));
+            fetchRepliesForComment(commentId);
+        } catch (error) {
+            console.error('Error submitting reply:', error);
+            setReplyErrors((prev) => ({
+                ...prev,
+                [commentId]: 'Bir hata oluştu. Lütfen tekrar deneyin.',
+            }));
+        } finally {
+            setReplySubmitLoading((prev) => ({ ...prev, [commentId]: false }));
         }
     };
 
@@ -373,6 +470,89 @@ export default function EventDetail({ eventId }) {
                                         <p className="text-gray-300 leading-relaxed">
                                             {comment.comment}
                                         </p>
+
+                                        {/* Replies */}
+                                        <div className="mt-4 space-y-3">
+                                            {replyFetching[comment.id] ? (
+                                                <div className="text-sm text-gray-400">
+                                                    Yanıtlar yükleniyor...
+                                                </div>
+                                            ) : (replies[comment.id]?.length ?? 0) > 0 ? (
+                                                <div className="space-y-3 border-l border-red-600/20 pl-4">
+                                                    {replies[comment.id].map((reply) => {
+                                                        const replyUserName =
+                                                            reply.user?.name ||
+                                                            reply.userName ||
+                                                            (reply.user_id ? `Kullanıcı #${reply.user_id}` : 'Bilinmeyen Kullanıcı');
+
+                                                        return (
+                                                            <div
+                                                                key={reply.id}
+                                                                className="bg-black/40 border border-red-600/10 rounded-lg p-3"
+                                                            >
+                                                                <div className="flex items-center justify-between mb-1">
+                                                                    <p className="text-sm font-semibold text-white">
+                                                                        {replyUserName}
+                                                                    </p>
+                                                                    <p className="text-xs text-gray-500">
+                                                                        {reply.created_at
+                                                                            ? new Date(reply.created_at).toLocaleDateString('tr-TR', {
+                                                                                year: 'numeric',
+                                                                                month: 'long',
+                                                                                day: 'numeric',
+                                                                                hour: '2-digit',
+                                                                                minute: '2-digit',
+                                                                            })
+                                                                            : ''}
+                                                                    </p>
+                                                                </div>
+                                                                <p className="text-gray-300 text-sm leading-relaxed">
+                                                                    {reply.reply}
+                                                                </p>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            ) : (
+                                                <p className="text-sm text-gray-500">
+                                                    Bu yoruma henüz yanıt verilmemiş.
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Reply Form */}
+                                        {canReply && (
+                                            <form
+                                                onSubmit={(e) => handleReplySubmit(e, comment.id)}
+                                                className="mt-4 space-y-3"
+                                            >
+                                                <textarea
+                                                    value={replyInputs[comment.id] || ''}
+                                                    onChange={(e) => handleReplyInputChange(comment.id, e.target.value)}
+                                                    rows={3}
+                                                    maxLength={255}
+                                                    className="w-full px-4 py-2 bg-black/50 border border-red-600/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition duration-200"
+                                                    placeholder="Bu yoruma cevap yazın..."
+                                                />
+                                                <p className="text-xs text-gray-500">
+                                                    {(replyInputs[comment.id]?.length || 0)}/255 karakter
+                                                </p>
+                                                {replyErrors[comment.id] && (
+                                                    <div className="p-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded">
+                                                        {replyErrors[comment.id]}
+                                                    </div>
+                                                )}
+                                                <PrimaryButton
+                                                    type="submit"
+                                                    disabled={
+                                                        replySubmitLoading[comment.id] ||
+                                                        !(replyInputs[comment.id]?.trim())
+                                                    }
+                                                >
+                                                    {replySubmitLoading[comment.id] ? 'Gönderiliyor...' : 'Cevapla'}
+                                                </PrimaryButton>
+                                            </form>
+                                        )}
                                     </div>
                                 ))}
                             </div>
